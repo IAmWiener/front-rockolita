@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Queue Player</title>
+</head>
+<body>
+  <h1>Music Queue</h1>
+
+  <!-- Lista de canciones -->
+  <div id="song-list"></div>
+
+  <!-- Reproductor de música -->
+  <audio id="audio-player" controls></audio>
+
+  <script>
+    // Obtener el reproductor de audio
+    const audioPlayer = document.getElementById('audio-player');
+    const songListDiv = document.getElementById('song-list');
+
+    // Función para obtener las canciones de la cola desde RabbitMQ
+    async function fetchQueue() {
+      try {
+        const response = await fetch('http://localhost:3000/api/queue/list'); // Llama al backend para obtener la lista de canciones
+        const queue = await response.json();
+
+        // Limpiar la lista anterior
+        songListDiv.innerHTML = '';
+
+        // Mostrar las canciones en la interfaz
+        queue.forEach((song, index) => {
+          const songItem = document.createElement('div');
+          songItem.textContent = `${song.name} - ${song.artist}`;
+          songItem.style.cursor = 'pointer';
+          songItem.addEventListener('click', () => playSong(song.preview_url));
+          songListDiv.appendChild(songItem);
+        });
+      } catch (error) {
+        console.error('Error fetching queue:', error);
+      }
+    }
+
+    // Función para reproducir una canción
+    function playSong(url) {
+      if (url) {
+        audioPlayer.src = url;
+        audioPlayer.play();
+      } else {
+        alert('No preview available for this song.');
+      }
+    }
+
+    // Obtener la cola de canciones cuando la página cargue
+    window.onload = fetchQueue;
+  </script>
+</body>
+</html>
